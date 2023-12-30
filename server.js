@@ -10,7 +10,7 @@ const app = express();
 
 
 //connecting mongoose to mongodb
-mongoose.connect('mongobd://localhost/catsite');
+mongoose.connect(process.env.DATABASE_URL);
 //connection put in variable db
 const db = mongoose.connection;
 
