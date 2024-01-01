@@ -12,7 +12,7 @@ const catSchema = new mongoose.Schema({
         required: true
     },
     age: {
-        type: Int16Array
+        type: Number,
     },
     description: {
         type: String
