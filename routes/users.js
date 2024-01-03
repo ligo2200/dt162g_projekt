@@ -3,7 +3,11 @@
 // pull in express library
 const express = require('express');
 const router = express.Router();
-// including model for course
+
+//pull in bcrypt
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+// including model for user
 const User = require('../models/user');
 
 // get users
@@ -22,7 +26,7 @@ router.get('/:id', getUser, (req, res) => {
 
 });
 
-// create course
+// create user
 router.post('/', async (req, res) => {
     
     const user = new User ({
