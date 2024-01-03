@@ -4,12 +4,12 @@
 const express = require('express');
 const router = express.Router();
 
-//pull in bcrypt
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
-
 // including model for user
 const User = require('../models/user');
+
+//use controller
+const userController = require('../controllers/userController');
+
 
 // get users
 router.get('/', async (req, res) => {
@@ -21,29 +21,36 @@ router.get('/', async (req, res) => {
     }
 });
 
+
 // get user by id
 router.get('/:id', getUser, (req, res) => {
     res.send(res.user);
 
 });
 
+
 // create user
 router.post('/', async (req, res) => {
-    
-    const user = new User ({
-        first_name: req.body.first_name, 
-        last_name: req.body.last_name,
-        username: req.body.username, 
-        password: req.body.password
-    });
-
     try {
-        const newUser = await user.save();
-        res.status(201).json(newUser);
+      const { user, token } = await userController.createUser(req.body);
+      res.status(201).json({ user, token });
     } catch (err) {
-        res.status(400).json({ message: err.message });
+      res.status(400).json({ message: err.message });
     }
-})
+  });
+
+  
+  // login user
+  router.post('/login', async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const { user, token } = await userController.loginUser(username, password);
+      res.status(200).json({ user, token });
+    } catch (error) {
+      res.status(401).json({ message: error.message });
+    }
+  });
+
 
 // update course
 router.patch('/:id', getUser, async (req, res) => {
@@ -70,7 +77,8 @@ router.patch('/:id', getUser, async (req, res) => {
 
 });
 
-// deleting course
+
+// deleting user
 router.delete('/:id', getUser, async (req, res) => {
     try {
         await res.user.deleteOne();
@@ -78,7 +86,8 @@ router.delete('/:id', getUser, async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-})
+});
+
 
 // middleware function (getting id)
 async function getUser(req, res, next) {
