@@ -7,6 +7,7 @@ const router = express.Router();
 //pull in bcrypt
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+
 // including model for user
 const User = require('../models/user');
 
