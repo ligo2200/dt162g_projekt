@@ -4,6 +4,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
+const path = require('path');
+
 
 // expressfunction put in variable app
 const app = express();
@@ -25,6 +27,14 @@ app.use(express.json());
 
 // enable cors
 app.use(cors());
+
+// combining express with react
+app.use(express.static(path.join(__dirname, 'client', 'build')));
+
+// requests directed to react
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+});
 
 
 // route setup
