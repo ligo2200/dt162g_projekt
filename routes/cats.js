@@ -3,34 +3,59 @@ const express = require('express');
 const router = express.Router();
 // including model for course
 const Cat = require('../models/cat');
+// jwt
+const jwt = require('jsonwebtoken');
 
 
 "use strict";
 
 
+const authenticateToken = (req, res, next) => {
+    // Authorization header requested from client
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) {
+        return res.status(401).json({ message: 'Åtkomst nekad. Ingen token tillgänglig.' });
+    }
+
+    console.log('Token:', token);
+    console.log('JWT_SECRET:', process.env.JWT_SECRET);
+    // verifying token, if token is correct user has access to route
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Åtkomst nekad. Ogiltig token.' });
+        }
+
+        req.user = user;
+        next();
+    });
+};
+
+
 // get cats
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
         const cats = await Cat.find();
         res.json(cats);
     } catch (err) {
-        res.status(500).json({ message: err.message});
+        res.status(500).json({ message: err.message });
     }
 });
 
-// get user by id
+// get cat by id
 router.get('/:id', getCat, (req, res) => {
     res.send(res.cat);
 
 });
 
-// create course
+// create cat
 router.post('/', async (req, res) => {
-    
-    const cat = new Cat ({
-        name: req.body.name, 
+
+    const cat = new Cat({
+        name: req.body.name,
         color: req.body.color,
-        age: req.body.age, 
+        age: req.body.age,
         description: req.body.description
     });
 
@@ -42,7 +67,7 @@ router.post('/', async (req, res) => {
     }
 })
 
-// update course
+// update cat
 router.patch('/:id', getCat, async (req, res) => {
     //check if body is not empty
     if (req.body.name != null) {
@@ -67,7 +92,7 @@ router.patch('/:id', getCat, async (req, res) => {
 
 });
 
-// deleting course
+// deleting cat
 router.delete('/:id', getCat, async (req, res) => {
     try {
         await res.cat.deleteOne();
@@ -80,18 +105,40 @@ router.delete('/:id', getCat, async (req, res) => {
 // middleware function (getting id)
 async function getCat(req, res, next) {
     try {
-        cat = await Cat.findById(req.params.id);
+        const cat = await Cat.findById(req.params.id);
 
-        // if course doesn't exist
+        // if cat doesn't exist
         if (cat == null) {
             return res.status(404).json({ message: "Kan inte hitta katten" });
         }
+
+        res.cat = cat;
+        next();
+
     } catch (err) {
         return res.status(500).json({ message: err.message });
     }
-
-    res.cat = cat;
-    next();
 }
+/*
+// middleware function (locked route)
+async function authenticateToken(req, res, next) {
+    try {
+        // Authorization header requested from client
+        const token = req.header('Authorization');
+
+        if (!token) {
+            return res.status(401).json({ message: 'Åtkomst nekad. Ingen token tillgänglig.' });
+        }
+        // verifying token, if token is correct user has access to route
+        const user = await jwt.verify(token, process.env.JWT_SECRET);
+
+
+        req.user = user;
+        next();
+    } catch (err) {
+        console.log(err);
+        return res.status(403).json({ message: 'Åtkomst nekad. Ogiltig token.' });
+    }
+};*/
 
 module.exports = router;

@@ -1,0 +1,12 @@
+GET http://localhost:3000/cats
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NTlmY2RhOWUyOTYyZjc2YTc3OGE5MDgiLCJpYXQiOjE3MDQ5ODI0MjEsImV4cCI6MTcwNDk4OTYyMX0.znzlAuIeGS7AAuT-g5iZz4IUG1qComZHcY0vdiuGfrM
+
+###
+
+POST http://localhost:3000/users/login
+Content-Type: application/json
+
+{
+    "username": "karin",
+    "password": "engblom"
+}
