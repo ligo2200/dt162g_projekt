@@ -119,6 +119,7 @@ async function getCat(req, res, next) {
         return res.status(500).json({ message: err.message });
     }
 }
+
 /*
 // middleware function (locked route)
 async function authenticateToken(req, res, next) {

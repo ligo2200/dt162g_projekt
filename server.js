@@ -25,8 +25,16 @@ db.once('open', () => console.log('Connected to Database'));
 // allow use of json
 app.use(express.json());
 
+// Only allow requests from http://localhost:5173
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  credentials: true, // allow credentials (i.e. cookies, authentication)
+};
+
 // enable cors
-app.use(cors());
+app.use(cors(corsOptions));
+
+
 
 /*
 // combining express with react
