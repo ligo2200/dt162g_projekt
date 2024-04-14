@@ -11,7 +11,7 @@ const catSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    age: {
+    birth: {
         type: Number,
     },
     description: {

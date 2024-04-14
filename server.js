@@ -50,9 +50,11 @@ app.get('*', (req, res) => {
 // route setup
 const catsRouter = require('./routes/cats');
 const usersRouter = require('./routes/users');
+const articlesRouter = require('routes/articles');
 // app use router
 app.use('/cats', catsRouter);
 app.use('/users', usersRouter);
+app.use('/articles', articlesRouter);
 
 
 // listening to port 3000
