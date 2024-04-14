@@ -1,8 +1,8 @@
 // pull in express library
 const express = require('express');
 const router = express.Router();
-// including model for cat
-const Cat = require('../models/cat');
+// including model for article
+const Article = require('../models/article');
 // jwt
 const jwt = require('jsonwebtoken');
 
@@ -33,86 +33,78 @@ const authenticateToken = (req, res, next) => {
 };
 
 
-// get cats
+// get articles
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const cats = await Cat.find();
-        res.json(cats);
+        const articles = await Article.find();
+        res.json(articles);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// get cat by id
-router.get('/:id', getCat, (req, res) => {
-    res.send(res.cat);
+// get article by id
+router.get('/:id', getArticle, (req, res) => {
+    res.send(res.article);
 
 });
 
-// create cat
+// create article
 router.post('/', async (req, res) => {
 
-    const cat = new Cat({
-        name: req.body.name,
-        color: req.body.color,
-        age: req.body.age,
-        description: req.body.description
+    const article = new Article({
+        title: req.body.title,
+        content: req.body.content,
     });
 
     try {
-        const newCat = await cat.save();
-        res.status(201).json(newCat);
+        const newArticle = await article.save();
+        res.status(201).json(newArticle);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 })
 
-// update cat
-router.patch('/:id', getCat, async (req, res) => {
+// update article
+router.patch('/:id', getArticle, async (req, res) => {
     //check if body is not empty
-    if (req.body.name != null) {
-        res.cat.name = req.body.name;
+    if (req.body.title != null) {
+        res.cat.title = req.body.title;
     }
-    if (req.body.color != null) {
-        res.cat.color = req.body.color;
-    }
-    if (req.body.age != null) {
-        res.cat.age = req.body.age;
-    }
-    if (req.body.description != null) {
-        res.cat.description = req.body.description;
+    if (req.body.content != null) {
+        res.cat.content = req.body.content;
     }
 
     try {
-        const updatedCat = await res.cat.save();
-        res.json(updatedCat);
+        const updatedArticle = await res.article.save();
+        res.json(updatedArticle);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 
 });
 
-// deleting cat
-router.delete('/:id', getCat, async (req, res) => {
+// deleting article
+router.delete('/:id', getArticle, async (req, res) => {
     try {
-        await res.cat.deleteOne();
-        res.json({ message: "Katt raderad" });
+        await res.article.deleteOne();
+        res.json({ message: "Artikel raderad" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 })
 
 // middleware function (getting id)
-async function getCat(req, res, next) {
+async function getArticle(req, res, next) {
     try {
-        const cat = await Cat.findById(req.params.id);
+        const article = await Article.findById(req.params.id);
 
         // if cat doesn't exist
-        if (cat == null) {
-            return res.status(404).json({ message: "Kan inte hitta katten" });
+        if (article == null) {
+            return res.status(404).json({ message: "Kan inte hitta artikeln" });
         }
 
-        res.cat = cat;
+        res.article = article;
         next();
 
     } catch (err) {
