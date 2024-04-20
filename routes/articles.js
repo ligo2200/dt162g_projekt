@@ -5,11 +5,15 @@ const router = express.Router();
 const Article = require('../models/article');
 // jwt
 const jwt = require('jsonwebtoken');
+// multer for uploading files
+const multer = require('multer');
+const upload = require('../multerConfig');
+const fs = require('fs');
 
 
 "use strict";
 
-
+//middleware for authentification with token
 const authenticateToken = (req, res, next) => {
     // Authorization header requested from client
     const authHeader = req.headers['authorization'];
@@ -21,6 +25,7 @@ const authenticateToken = (req, res, next) => {
 
     console.log('Token:', token);
     console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
     // verifying token, if token is correct user has access to route
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
@@ -34,7 +39,7 @@ const authenticateToken = (req, res, next) => {
 
 
 // get articles
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const articles = await Article.find();
         res.json(articles);
@@ -50,7 +55,7 @@ router.get('/:id', getArticle, (req, res) => {
 });
 
 // create article
-router.post('/', async (req, res) => {
+/*router.post('/', async (req, res) => {
 
     const article = new Article({
         title: req.body.title,
@@ -63,16 +68,55 @@ router.post('/', async (req, res) => {
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
-})
+});*/
+
+//create article
+router.post('/', upload.single('image'), async (req, res) => {
+
+    try {
+        const { filename, path, mimetype } = req.file;
+
+        const article = new Article({
+            title: req.body.title,
+            content: req.body.content,
+            // include imageinformation in articleobject
+            image: {
+                filename: filename,
+                path: path,
+                mimetype: mimetype
+            }
+        });
+
+        // Save new article in database
+        const newArticle = await article.save();
+
+        res.status(201).json(newArticle);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
 
 // update article
-router.patch('/:id', getArticle, async (req, res) => {
+router.patch('/:id', getArticle, upload.single('image'), async (req, res) => {
+
     //check if body is not empty
     if (req.body.title != null) {
-        res.cat.title = req.body.title;
+        res.article.title = req.body.title;
     }
     if (req.body.content != null) {
-        res.cat.content = req.body.content;
+        res.article.content = req.body.content;
+    }
+
+    //check if there is an uploaded image
+    if (req.file) {
+
+        const imagePath = 'uploads/' + req.file.filename;
+
+        res.article.image = {
+            filename: req.file.filename,
+            path: imagePath, 
+            mimetype: req.file.mimetype
+        };
     }
 
     try {
@@ -87,19 +131,38 @@ router.patch('/:id', getArticle, async (req, res) => {
 // deleting article
 router.delete('/:id', getArticle, async (req, res) => {
     try {
+        // check if article exists
+        if (!res.article) {
+            return res.status(404).json({ message: "Kan inte hitta artikeln" });
+        }
+
+        // path to image
+        const imagePath = res.article.image.path;
+
+        //erase article from database
         await res.article.deleteOne();
+
+        //remove imagefile from filesystem (uploads)
+        fs.unlink(imagePath, (err) => {
+            if (err) {
+                console.error("Kunde inte ta bort bildfilen:", err);
+                return res.status(500).json({ message: "Kunde inte ta bort bildfilen" });
+            }
+            console.log("Bildfilen har tagits bort");
+        });
+
         res.json({ message: "Artikel raderad" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-})
+});
 
 // middleware function (getting id)
 async function getArticle(req, res, next) {
     try {
         const article = await Article.findById(req.params.id);
 
-        // if cat doesn't exist
+        // if article doesn't exist
         if (article == null) {
             return res.status(404).json({ message: "Kan inte hitta artikeln" });
         }
