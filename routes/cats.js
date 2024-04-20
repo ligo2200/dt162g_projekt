@@ -95,7 +95,6 @@ router.post('/', upload.single('image'), async (req, res) => {
     }
 });*/
 
-// 
 
 // update cat
 router.patch('/:id', getCat, upload.single('image'), async (req, res) => {
@@ -156,7 +155,7 @@ router.delete('/:id', getCat, async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-})
+});
 
 // middleware function (getting id)
 async function getCat(req, res, next) {
