@@ -40,7 +40,22 @@ const authenticateToken = (req, res, next) => {
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const cats = await Cat.find();
-        res.json(cats);
+
+        const catsWithImage = cats.map(cat => {
+            const imageUrl = cat.image;
+
+            return {
+                _id: cat._id,
+                name: cat.name,
+                breed: cat.breed,
+                birth: cat.birth,
+                color: cat.color,
+                description: cat.description,
+                image: imageUrl,
+            };
+        });
+
+        res.json(catsWithImage);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -58,17 +73,17 @@ router.post('/', upload.single('image'), async (req, res) => {
     try {
         const { filename, path, mimetype } = req.file;
 
+        
+        const imagePath = filename;
+
         const cat = new Cat({
             name: req.body.name,
+            breed: req.body.breed,
+            birth: req.body.birth,
             color: req.body.color,
-            age: req.body.age,
             description: req.body.description,
-            // Include imagedata in catobject
-            image: {
-                filename: filename,
-                path: path,
-                mimetype: mimetype
-            }
+            // Include image path in catobject
+            image: imagePath
         });
 
         // Save new cat in database
@@ -102,11 +117,14 @@ router.patch('/:id', getCat, upload.single('image'), async (req, res) => {
     if (req.body.name != null) {
         res.cat.name = req.body.name;
     }
+    if (req.body.breed != null) {
+        res.cat.breed = req.body.breed;
+    }
+    if (req.body.birth != null) {
+        res.cat.birth = req.body.birth;
+    }
     if (req.body.color != null) {
         res.cat.color = req.body.color;
-    }
-    if (req.body.age != null) {
-        res.cat.age = req.body.age;
     }
     if (req.body.description != null) {
         res.cat.description = req.body.description;
@@ -115,7 +133,7 @@ router.patch('/:id', getCat, upload.single('image'), async (req, res) => {
     //check if there is an uploaded image
     if (req.file) {
 
-        const imagePath = 'uploads/' + req.file.filename;
+        const imagePath = '..uploads/' + req.file.filename;
 
         res.cat.image = {
             filename: req.file.filename,

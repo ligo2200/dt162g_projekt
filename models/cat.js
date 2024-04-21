@@ -7,14 +7,20 @@ const catSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    color: {
-        type: String,
-        required: true
+    breed: {
+        type: String
     },
     birth: {
         type: Number,
     },
+    color: {
+        type: String,
+        required: true
+    },
     description: {
+        type: String
+    },
+    image: {
         type: String
     }
 });

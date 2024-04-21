@@ -10,6 +10,8 @@ const path = require('path');
 // expressfunction put in variable app
 const app = express();
 
+app.use('/uploads', express.static('uploads'));
+
 
 //connecting mongoose to mongodb
 mongoose.connect(process.env.DATABASE_URL);
