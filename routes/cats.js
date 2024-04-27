@@ -61,6 +61,16 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
+//get cats registrered by user
+router.get('/:userId', authenticateToken, async (req, res) => {
+    try {
+        const cats = await Cat.find({ userId: req.params.userId });
+        res.json(cats);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // get cat by id
 router.get('/:id', getCat, (req, res) => {
     res.send(res.cat);
@@ -68,12 +78,12 @@ router.get('/:id', getCat, (req, res) => {
 });
 
 // create cat
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
 
     try {
         const { filename, path, mimetype } = req.file;
 
-        
+
         const imagePath = filename;
 
         const cat = new Cat({
@@ -83,7 +93,9 @@ router.post('/', upload.single('image'), async (req, res) => {
             color: req.body.color,
             description: req.body.description,
             // Include image path in catobject
-            image: imagePath
+            image: imagePath,
+            // include which user created cat
+            userId: req.user.userId
         });
 
         // Save new cat in database
@@ -94,20 +106,20 @@ router.post('/', upload.single('image'), async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 });
-    
-    /*const cat = new Cat({
-        name: req.body.name,
-        color: req.body.color,
-        age: req.body.age,
-        description: req.body.description
-    });
 
-    try {
-        const newCat = await cat.save();
-        res.status(201).json(newCat);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
+/*const cat = new Cat({
+    name: req.body.name,
+    color: req.body.color,
+    age: req.body.age,
+    description: req.body.description
+});
+
+try {
+    const newCat = await cat.save();
+    res.status(201).json(newCat);
+} catch (err) {
+    res.status(400).json({ message: err.message });
+}
 });*/
 
 
@@ -137,7 +149,7 @@ router.patch('/:id', getCat, upload.single('image'), async (req, res) => {
 
         res.cat.image = {
             filename: req.file.filename,
-            path: imagePath, 
+            path: imagePath,
             mimetype: req.file.mimetype
         };
     }
