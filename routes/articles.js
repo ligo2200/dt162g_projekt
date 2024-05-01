@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const upload = require('../multerConfig');
 const fs = require('fs');
+// to sanitize input
+const sanitizeHtml = require('sanitize-html');
 
 
 "use strict";
@@ -48,44 +50,46 @@ router.get('/', async (req, res) => {
     }
 });
 
+//get articles registrered by user
+router.get('/user/:userId', authenticateToken, async (req, res) => {
+    try {
+        const articles = await Article.find({ userId: req.params.userId });
+        res.json(articles);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
 // get article by id
 router.get('/:id', getArticle, (req, res) => {
     res.send(res.article);
 
 });
 
-// create article
-/*router.post('/', async (req, res) => {
-
-    const article = new Article({
-        title: req.body.title,
-        content: req.body.content,
-    });
-
-    try {
-        const newArticle = await article.save();
-        res.status(201).json(newArticle);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-});*/
-
 //create article
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
 
     try {
-        const { filename, path, mimetype } = req.file;
+        let imagePath = null;
+
+        if (req.file) {
+            const { filename } = req.file;
+            imagePath = filename;
+        }
 
         const article = new Article({
             title: req.body.title,
             content: req.body.content,
-            // include imageinformation in articleobject
-            image: {
-                filename: filename,
-                path: path,
-                mimetype: mimetype
-            }
+            // Include image path in catobject
+            image: imagePath,
+            // include which user created cat
+            userId: req.user.userId
         });
+
+        // sanitize inputdata before saving
+        article.title = sanitizeHtml(req.body.title);
+        article.content = sanitizeHtml(req.body.content);
 
         // Save new article in database
         const newArticle = await article.save();
@@ -97,59 +101,69 @@ router.post('/', upload.single('image'), async (req, res) => {
 });
 
 // update article
-router.patch('/:id', getArticle, upload.single('image'), async (req, res) => {
-
-    //check if body is not empty
-    if (req.body.title != null) {
-        res.article.title = req.body.title;
-    }
-    if (req.body.content != null) {
-        res.article.content = req.body.content;
-    }
-
-    //check if there is an uploaded image
-    if (req.file) {
-
-        const imagePath = 'uploads/' + req.file.filename;
-
-        res.article.image = {
-            filename: req.file.filename,
-            path: imagePath, 
-            mimetype: req.file.mimetype
-        };
-    }
+router.patch('/:id', authenticateToken, getArticle, upload.single('image'), async (req, res) => {
 
     try {
+        //get article from database
+        const article = await Article.findById(req.params.id);
+        if (!article) {
+            return res.status(404).json({ message: "Kan inte hitta artikel" });
+        }
+        //check if body is not empty
+        if (req.body.title != null) {
+            res.article.title = req.body.title;
+        }
+        if (req.body.content != null) {
+            res.article.content = req.body.content;
+        }
+
+        //check if there is an uploaded image
+        if (req.file) {
+
+            res.article.image = req.file.filename;
+        }
+
+        // sanitize inputdata before saving
+        res.article.title = sanitizeHtml(req.body.title);
+        res.article.content = sanitizeHtml(req.body.content);
+
+        // saving updated article
         const updatedArticle = await res.article.save();
+        //sending response as json
         res.json(updatedArticle);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error("Fel vid uppdatering av artikeln:", err);
+        res.status(500).json({ message: "Ett internt fel uppstod vid uppdatering av artikeln." });
     }
 
 });
 
 // deleting article
-router.delete('/:id', getArticle, async (req, res) => {
+router.delete('/:id', authenticateToken, getArticle, async (req, res) => {
+
     try {
         // check if article exists
         if (!res.article) {
             return res.status(404).json({ message: "Kan inte hitta artikeln" });
         }
 
-        // path to image
-        const imagePath = res.article.image.path;
-
         //erase article from database
         await res.article.deleteOne();
 
-        //remove imagefile from filesystem (uploads)
-        fs.unlink(imagePath, (err) => {
-            if (err) {
-                console.error("Kunde inte ta bort bildfilen:", err);
-                return res.status(500).json({ message: "Kunde inte ta bort bildfilen" });
-            }
-            console.log("Bildfilen har tagits bort");
-        });
+        if (res.article.image) {
+            // path to image
+            const imagePath = path.join(__dirname, '..', 'uploads', res.cat.image);
+
+            //remove imagefile from filesystem (uploads)
+            fs.unlink(imagePath, (err) => {
+                if (err) {
+                    console.error("Kunde inte ta bort bildfilen:", err);
+                    return res.status(500).json({ message: "Kunde inte ta bort bildfilen" });
+                }
+                console.log("Bildfilen har tagits bort");
+            });
+        }
+
 
         res.json({ message: "Artikel raderad" });
     } catch (err) {
@@ -174,27 +188,5 @@ async function getArticle(req, res, next) {
         return res.status(500).json({ message: err.message });
     }
 }
-
-/*
-// middleware function (locked route)
-async function authenticateToken(req, res, next) {
-    try {
-        // Authorization header requested from client
-        const token = req.header('Authorization');
-
-        if (!token) {
-            return res.status(401).json({ message: 'Åtkomst nekad. Ingen token tillgänglig.' });
-        }
-        // verifying token, if token is correct user has access to route
-        const user = await jwt.verify(token, process.env.JWT_SECRET);
-
-
-        req.user = user;
-        next();
-    } catch (err) {
-        console.log(err);
-        return res.status(403).json({ message: 'Åtkomst nekad. Ogiltig token.' });
-    }
-};*/
 
 module.exports = router;

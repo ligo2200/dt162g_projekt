@@ -13,7 +13,8 @@ const articleSchema = new mongoose.Schema({
     },
     image: {
         type: String
-    }
+    },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } //reference to user
 });
 
 // export schema

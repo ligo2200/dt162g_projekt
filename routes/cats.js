@@ -76,7 +76,6 @@ router.get('/user/:userId', authenticateToken, async (req, res) => {
 router.get('/:id', getCat, async (req, res) => {
 
     try {
-        console.log("Kattobjekt:", res.cat);
         res.status(200).json(res.cat);
     } catch (err) {
         res.status(500).json({ message: err.message });

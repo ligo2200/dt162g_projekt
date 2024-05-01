@@ -5,8 +5,8 @@ const saltRounds = 10;
 const User = require('../models/user');
 
 const generateToken = (userId) => {
-  // Create JWT with user id expiration after 2 hours
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '2h' });
+  // Create JWT with user id expiration after 4 hours
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '4h' });
 };
 
 const createUser = async (userData) => {
