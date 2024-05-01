@@ -6,6 +6,9 @@ const cors = require('cors');
 
 const path = require('path');
 
+const debug = require('debug')('app:server'); // Ange det namespace som passar din applikation, till exempel 'app:server'
+
+
 
 // expressfunction put in variable app
 const app = express();
@@ -60,4 +63,7 @@ app.use('/articles', articlesRouter);
 
 
 // listening to port 3000
-app.listen(3000, () => console.log('Server Started'));
+app.listen(3000, () => {
+  console.log('Server Started');
+  debug('servern lyssnar på port 3000');
+});

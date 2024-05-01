@@ -10,3 +10,8 @@ Content-Type: application/json
     "username": "karin",
     "password": "engblom"
 }
+
+###
+
+GET http://localhost:3000/cats/
+Authorization:
