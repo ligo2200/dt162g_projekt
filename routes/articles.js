@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 // multer for uploading files
 const multer = require('multer');
 const upload = require('../multerConfig');
+const path = require('path');
 const fs = require('fs');
 // to sanitize input
 const sanitizeHtml = require('sanitize-html');
@@ -81,7 +82,7 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
         const article = new Article({
             title: req.body.title,
             content: req.body.content,
-            // Include image path in catobject
+            // Include image path in articleobject
             image: imagePath,
             // include which user created cat
             userId: req.user.userId
@@ -148,11 +149,11 @@ router.delete('/:id', authenticateToken, getArticle, async (req, res) => {
         }
 
         //erase article from database
-        await res.article.deleteOne();
+        await Article.findByIdAndDelete(req.params.id);
 
         if (res.article.image) {
             // path to image
-            const imagePath = path.join(__dirname, '..', 'uploads', res.cat.image);
+            const imagePath = path.join(__dirname, '..', 'uploads', res.article.image);
 
             //remove imagefile from filesystem (uploads)
             fs.unlink(imagePath, (err) => {
