@@ -36,7 +36,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 
-
 /*
 // combining express with react
 app.use(express.static(path.join(__dirname, 'client', 'build')));
@@ -46,7 +45,6 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
 });
 */
-
 
 // route setup
 const catsRouter = require('./routes/cats');

@@ -1,7 +1,7 @@
 // pulling in mongoose
 const mongoose = require('mongoose');
 
-// schema for cats
+// schema for users
 const userSchema = new mongoose.Schema({
     first_name: {
         type: String,
